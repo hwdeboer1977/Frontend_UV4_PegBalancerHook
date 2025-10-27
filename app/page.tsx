@@ -54,7 +54,7 @@ export default function Home() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-5xl font-bold text-slate-800 mb-2">
-            Soft Peg Mechanism
+            PegBalancerHook Uniswap V4
           </h1>
           <p className="text-lg text-slate-600">
             Interactive Dashboard - Buy, Mint & Redeem Tokens

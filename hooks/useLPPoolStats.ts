@@ -128,9 +128,19 @@ export function useLPPoolStats(navPrice = "1.0000"): LPPoolStats {
 
       const spreadPct = ((lpPriceValue - navPriceValue) / navPriceValue) * 100;
 
-      const deadU = navPriceValue * (1 + SOFT_PEG_CONFIG.deadzonePercent / 100);
-      const deadL = navPriceValue * (1 - SOFT_PEG_CONFIG.deadzonePercent / 100);
-      const inDead = lpPriceValue >= deadL && lpPriceValue <= deadU;
+      const devBps =
+        lpPriceValue > navPriceValue
+          ? ((lpPriceValue - navPriceValue) * 10_000) / navPriceValue
+          : ((navPriceValue - lpPriceValue) * 10_000) / navPriceValue;
+
+      // For display purposes, show the deadzone as a price range around NAV
+      const deadL =
+        navPriceValue * (1 - SOFT_PEG_CONFIG.deadzonePercent / 10_000);
+      const deadU =
+        navPriceValue * (1 + SOFT_PEG_CONFIG.deadzonePercent / 10_000);
+
+      // Check if we're inside the deadzone
+      const inDead = devBps <= SOFT_PEG_CONFIG.deadzonePercent;
 
       let currentFee = SOFT_PEG_CONFIG.baseFee;
       if (!inDead) {

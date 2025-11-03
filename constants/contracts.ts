@@ -151,7 +151,10 @@ export const VAULT_ABI = [
 ] as const;
 
 export const HOOK_ABI = [
+  // Existing function
   "function currentPrices(tuple(address currency0, address currency1, uint24 fee, int24 tickSpacing, address hooks) poolKey) view returns (uint256 priceHumanLP, uint256 priceRawE18, uint160 sqrtP)",
+  // Add the FeeChosen event
+  "event FeeChosen(uint24 rawFee, uint24 withFlag, bool toward, uint256 devBps)",
 ] as const;
 
 /* =========================

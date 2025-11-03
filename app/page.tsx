@@ -4,6 +4,7 @@ import { useState } from "react";
 import LPPoolStats from "@/components/LPPoolStats";
 import VaultStats from "@/components/VaultStats";
 import UserBalance from "@/components/UserBalance";
+import ScenariosPreview from "@/components/ScenariosPreview"; // NEW IMPORT
 import BuyTokenCard from "@/components/BuyTokenCard";
 import MintTokenCard from "@/components/MintTokenCard";
 import RedeemTokenCard from "@/components/RedeemTokenCard";
@@ -34,14 +35,13 @@ export default function Home() {
   const {
     lpPrice,
     liquidity,
-    fee,
-    deadzoneUpper,
-    deadzoneLower,
+    lastTxFee, // Last trade fee (NEW)
+    lastTxHash, // Transaction link (NEW)
+    lastTxTimestamp, // When it happened (NEW)
     spread,
-    inDeadzone,
     isLoading: lpLoading,
     error: lpError,
-  } = useLPPoolStats(sharePrice);
+  } = useLPPoolStats(sharePrice, account);
 
   const handleTransactionSuccess = () => {
     // Trigger a refresh of balances
@@ -78,16 +78,20 @@ export default function Home() {
             />
           </div>
 
+          {/* SCENARIOS PREVIEW - Links to /scenarios page */}
+          <div className="mb-6">
+            <ScenariosPreview />
+          </div>
+
           {/* LP and Vault Stats - Side by Side */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <LPPoolStats
               lpPrice={lpPrice}
               liquidity={liquidity}
-              fee={fee}
-              deadzoneUpper={deadzoneUpper}
-              deadzoneLower={deadzoneLower}
               spread={spread}
-              inDeadzone={inDeadzone}
+              lastTxFee={lastTxFee} // NEW
+              lastTxHash={lastTxHash} // NEW
+              lastTxTimestamp={lastTxTimestamp} // NEW
               isLoading={lpLoading}
               error={lpError}
             />

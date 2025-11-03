@@ -32,3 +32,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# other files
+PegBalancer_Showcase*
+/backend/Balance_log.json

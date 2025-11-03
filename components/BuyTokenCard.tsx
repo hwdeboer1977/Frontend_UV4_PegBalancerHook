@@ -478,12 +478,6 @@ export default function BuyTokenCard({
               ${Number(lpPrice || "0").toFixed(4)}
             </span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-slate-600">Trading Fee:</span>
-            <span className="font-bold text-amber-600">
-              {tradingFeePct.toFixed(2)}%
-            </span>
-          </div>
           <div className="flex justify-between pt-2 border-t border-blue-200">
             <span className="text-slate-600">You will receive:</span>
             <span className="font-bold text-blue-700">

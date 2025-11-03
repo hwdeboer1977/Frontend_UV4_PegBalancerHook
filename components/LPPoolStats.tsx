@@ -1,41 +1,141 @@
-'use client'
+"use client";
+
+import { useState, useEffect } from "react";
 
 interface LPPoolStatsProps {
-  lpPrice: string
-  liquidity: string
-  fee: string
-  deadzoneUpper: string
-  deadzoneLower: string
-  spread: string
-  inDeadzone: boolean
-  isLoading: boolean
-  error: string | null
+  lpPrice: string;
+  liquidity: string;
+  spread: string;
+  lastTxFee: string | null; // NEW
+  lastTxHash: string | null; // NEW
+  lastTxTimestamp: number | null; // NEW
+  isLoading: boolean;
+  error: string | null;
 }
 
 export default function LPPoolStats({
   lpPrice,
   liquidity,
-  fee,
-  deadzoneUpper,
-  deadzoneLower,
   spread,
-  inDeadzone,
+  lastTxFee, // NEW
+  lastTxHash, // NEW
+  lastTxTimestamp, // NEW
   isLoading,
-  error
+  error,
 }: LPPoolStatsProps) {
+  // ArbExecutor toggle
+  const [arbExecutorActive, setArbExecutorActive] = useState(true);
+  const [isToggling, setIsToggling] = useState(false);
+
+  // Calculate time ago for last transaction
+  const timeAgo = lastTxTimestamp
+    ? `${Math.floor((Date.now() / 1000 - lastTxTimestamp) / 60)}m ago`
+    : "";
+
+  // Handle toggle
+  const handleToggle = async () => {
+    setIsToggling(true);
+
+    try {
+      const response = await fetch("/api/arbexecutor/toggle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: !arbExecutorActive }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setArbExecutorActive(!arbExecutorActive);
+        console.log("✅ ArbExecutor toggled:", data.message);
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (err: any) {
+      console.error("Failed to toggle ArbExecutor:", err);
+      alert(`Failed to toggle ArbExecutor: ${err.message}`);
+    } finally {
+      setIsToggling(false);
+    }
+  };
+
+  // Also add useEffect to fetch initial status on mount:
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const response = await fetch("/api/arbexecutor/toggle");
+        const data = await response.json();
+        setArbExecutorActive(data.active);
+      } catch (err) {
+        console.error("Failed to fetch ArbExecutor status:", err);
+      }
+    };
+
+    fetchStatus();
+
+    // Poll status every 30 seconds
+    const interval = setInterval(fetchStatus, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Return from here
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-blue-100">
-      <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-        <span className="text-3xl">💱</span>
-        Liquidity Pool Stats
-      </h2>
-      
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+          <span className="text-3xl">💱</span>
+          Liquidity Pool Stats
+        </h2>
+
+        {/* ArbExecutor Toggle */}
+        <div className="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
+          <div className="text-right">
+            <div className="text-sm font-semibold text-slate-700">
+              🤖 ArbExecutor
+            </div>
+            <div
+              className={`text-xs ${
+                arbExecutorActive ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {arbExecutorActive ? "✅ Active" : "❌ Inactive"}
+            </div>
+          </div>
+
+          <button
+            onClick={handleToggle}
+            disabled={isToggling}
+            className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+              arbExecutorActive ? "bg-green-500" : "bg-red-400"
+            } ${isToggling ? "opacity-50 cursor-not-allowed" : ""}`}
+          >
+            <span
+              className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                arbExecutorActive ? "translate-x-7" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </div>
+      </div>
+
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
           {error}
         </div>
       )}
-      
+
+      {/* Status Banner */}
+      {!arbExecutorActive && (
+        <div className="mb-4 p-3 bg-amber-50 border border-amber-300 rounded-lg">
+          <div className="flex items-center gap-2">
+            <span className="text-amber-700 text-sm font-medium">
+              ⚠️ ArbExecutor is paused. Arbitrage opportunities will not be
+              captured automatically.
+            </span>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-4">
         <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
           <span className="text-slate-600 font-medium">LP Price</span>
@@ -45,62 +145,60 @@ export default function LPPoolStats({
             <span className="text-2xl font-bold text-blue-700">${lpPrice}</span>
           )}
         </div>
-        
+
         <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
           <span className="text-slate-600 font-medium">Total Liquidity</span>
           {isLoading ? (
             <span className="text-xl font-bold text-slate-400">Loading...</span>
           ) : (
-            <span className="text-2xl font-bold text-slate-700">${liquidity}</span>
-          )}
-        </div>
-        
-        <div className={`flex justify-between items-center p-3 rounded-lg ${
-          inDeadzone ? 'bg-green-50' : 'bg-amber-50'
-        }`}>
-          <span className="text-slate-600 font-medium">Current Fee</span>
-          {isLoading ? (
-            <span className="text-xl font-bold text-amber-400">Loading...</span>
-          ) : (
-            <span className={`text-2xl font-bold ${inDeadzone ? 'text-green-700' : 'text-amber-700'}`}>
-              {fee}%
+            <span className="text-2xl font-bold text-slate-700">
+              ${liquidity}
             </span>
           )}
         </div>
-        
-        <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-          <span className="text-slate-600 font-medium">Deadzone Range</span>
-          {isLoading ? (
-            <span className="text-lg font-bold text-green-400">Loading...</span>
-          ) : (
-            <span className="text-lg font-bold text-green-700">
-              ${deadzoneLower} - ${deadzoneUpper}
-            </span>
-          )}
-        </div>
-        
+
+        {/* LAST TRANSACTION FEE - What you actually paid */}
+        {lastTxFee && (
+          <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border-2 border-blue-200">
+            <div>
+              <span className="text-slate-600 font-medium">Last Trade Fee</span>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Fee you paid {timeAgo}
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-blue-700">
+                {lastTxFee}%
+              </div>
+              {lastTxHash && (
+                <a
+                  href={`https://sepolia.arbiscan.io/tx/${lastTxHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                >
+                  View tx ↗
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
           <span className="text-slate-600 font-medium">Spread (LP vs NAV)</span>
           {isLoading ? (
-            <span className="text-xl font-bold text-purple-400">Loading...</span>
+            <span className="text-xl font-bold text-purple-400">
+              Loading...
+            </span>
           ) : (
             <span className="text-2xl font-bold text-purple-700">
-              {parseFloat(spread) > 0 ? '+' : ''}{spread}%
+              {parseFloat(spread) > 0 ? "+" : ""}
+              {spread}%
             </span>
           )}
         </div>
       </div>
-      
-      <div className={`mt-4 p-3 rounded-lg text-center border-2 ${
-        inDeadzone 
-          ? 'bg-green-100 border-green-300' 
-          : 'bg-amber-100 border-amber-300'
-      }`}>
-        <span className={`font-bold ${inDeadzone ? 'text-green-800' : 'text-amber-800'}`}>
-          {inDeadzone ? '✓ Within Deadzone - Normal Fees' : '⚠ Outside Deadzone - Soft Peg Active'}
-        </span>
-      </div>
-      
+
       <div className="mt-2 text-xs text-slate-500 text-center">
         Auto-refreshes every 10 seconds
       </div>

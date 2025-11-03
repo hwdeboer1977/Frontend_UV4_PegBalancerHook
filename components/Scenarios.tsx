@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 
 export default function Scenarios() {
   return (
@@ -78,7 +79,7 @@ export default function Scenarios() {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-slate-600">Earned Fees:</span>
-              <span className="font-bold text-green-700">0.05% - 1.44%</span>
+              <span className="font-bold text-green-700">0.05% - 10%</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-slate-600">LP Protection:</span>
@@ -94,6 +95,35 @@ export default function Scenarios() {
               ✅ Dynamic fees maximize revenue
               <br />✅ Minimal IL for liquidity providers
             </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Detailed Comparison Chart */}
+      <div className="mt-8 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 border-2 border-slate-200">
+        <div className="bg-white rounded-lg p-4 shadow-inner">
+          <Image
+            src="/image/baseline_vs_pegbalancer_144k.png"
+            alt="Baseline vs PegBalancerHook comparison showing 17.4x revenue increase with 144K trading volume"
+            width={1400}
+            height={600}
+            priority
+            className="w-full h-auto rounded-lg"
+          />
+        </div>
+
+        {/* Key Metrics */}
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white rounded-lg p-4 border-2 border-green-200">
+            <div className="text-3xl font-bold text-green-600 mb-1">17.4x</div>
+            <div className="text-sm text-slate-600">Revenue Multiplier</div>
+          </div>
+
+          <div className="bg-white rounded-lg p-4 border-2 border-blue-200">
+            <div className="text-3xl font-bold text-blue-600 mb-1">$7,506</div>
+            <div className="text-sm text-slate-600">
+              PegBalancerHook Revenue
+            </div>
           </div>
         </div>
       </div>

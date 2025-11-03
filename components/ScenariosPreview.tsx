@@ -14,7 +14,7 @@ export default function ScenariosPreview() {
             Compare Scenarios
           </h3>
           <p className="text-slate-600 mb-4">
-            See how Baseline, Soft Peg, and Full System compare side-by-side
+            See how scenario Baseline and PegBalancerHook compare side-by-side
             with detailed metrics and explanations.
           </p>
 
@@ -22,10 +22,6 @@ export default function ScenariosPreview() {
             <div className="flex items-center gap-2">
               <span className="text-red-500">📉</span>
               <span className="text-slate-700">Baseline (Fixed Fee)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-orange-500">🛡️</span>
-              <span className="text-slate-700">Soft Peg (Dynamic)</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-green-500">⚡</span>

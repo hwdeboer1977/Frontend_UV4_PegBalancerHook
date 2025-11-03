@@ -27,14 +27,6 @@ export default function Scenarios() {
 
           <div className="space-y-3 bg-white/70 rounded-lg p-4">
             <div className="flex justify-between text-sm">
-              <span className="text-slate-600">Price Deviation:</span>
-              <span className="font-bold text-red-700">-9.5%</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-600">Correction Time:</span>
-              <span className="font-bold text-red-700">5-60 min</span>
-            </div>
-            <div className="flex justify-between text-sm">
               <span className="text-slate-600">Arb Profits:</span>
               <span className="font-bold text-red-700">External MEV</span>
             </div>
@@ -50,7 +42,6 @@ export default function Scenarios() {
 
           <div className="mt-4 bg-red-100 border border-red-300 rounded-lg p-3">
             <p className="text-xs text-red-800">
-              ❌ Price stays off-peg for minutes
               <br />
               ❌ MEV bots capture all arbitrage
               <br />
@@ -82,16 +73,6 @@ export default function Scenarios() {
 
           <div className="space-y-3 bg-white/70 rounded-lg p-4">
             <div className="flex justify-between text-sm">
-              <span className="text-slate-600">Price Deviation:</span>
-              <span className="font-bold text-green-700">
-                -9.5% → -0.95% ⚡
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-600">Correction Time:</span>
-              <span className="font-bold text-green-700">&lt;12 seconds</span>
-            </div>
-            <div className="flex justify-between text-sm">
               <span className="text-slate-600">Arb Profits:</span>
               <span className="font-bold text-green-700">Protocol ✓</span>
             </div>
@@ -107,7 +88,6 @@ export default function Scenarios() {
 
           <div className="mt-4 bg-green-100 border border-green-300 rounded-lg p-3">
             <p className="text-xs text-green-800">
-              ✅ Instant price correction (&lt;12s)
               <br />
               ✅ Protocol captures arbitrage profits
               <br />
@@ -116,26 +96,6 @@ export default function Scenarios() {
             </p>
           </div>
         </div>
-      </div>
-
-      {/* Bottom Summary */}
-      <div className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
-        <p className="text-sm text-slate-700 text-center">
-          <span className="font-bold text-blue-700">The Advantage:</span>{" "}
-          PegBalancerHook corrects price deviations{" "}
-          <span className="font-bold text-green-700">
-            95% faster (&lt;12s vs 5-60min)
-          </span>
-          , captures arbitrage profits for the{" "}
-          <span className="font-bold text-green-700">
-            protocol instead of MEV bots
-          </span>
-          , and earns{" "}
-          <span className="font-bold text-green-700">
-            dynamic fees (0.05% - 1.44%)
-          </span>{" "}
-          instead of a fixed 0.30%.
-        </p>
       </div>
     </div>
   );

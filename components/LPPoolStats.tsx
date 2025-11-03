@@ -6,31 +6,52 @@ interface LPPoolStatsProps {
   lpPrice: string;
   liquidity: string;
   spread: string;
-  lastTxFee: string | null; // NEW
-  lastTxHash: string | null; // NEW
-  lastTxTimestamp: number | null; // NEW
+  lastTxFee: string | null;
+  lastTxHash: string | null;
+  lastTxTimestamp: number | null;
   isLoading: boolean;
   error: string | null;
+}
+
+interface ProfitData {
+  hasData: boolean;
+  totalProfit: number;
+  totalProfitPercent: number;
+  arbTradeCount: number;
+  recentTrades?: Array<{
+    profit: number; // Changed from changeFromPrev
+    profitPercent: number;
+    timestamp: string;
+    txHash: string;
+    direction: string;
+  }>;
 }
 
 export default function LPPoolStats({
   lpPrice,
   liquidity,
   spread,
-  lastTxFee, // NEW
-  lastTxHash, // NEW
-  lastTxTimestamp, // NEW
+  lastTxFee,
+  lastTxHash,
+  lastTxTimestamp,
   isLoading,
   error,
 }: LPPoolStatsProps) {
   // ArbExecutor toggle
   const [arbExecutorActive, setArbExecutorActive] = useState(true);
   const [isToggling, setIsToggling] = useState(false);
+  const [profitData, setProfitData] = useState<ProfitData | null>(null);
 
   // Calculate time ago for last transaction
   const timeAgo = lastTxTimestamp
     ? `${Math.floor((Date.now() / 1000 - lastTxTimestamp) / 60)}m ago`
     : "";
+
+  // Get last trade profit - skip entries with 0 or undefined change
+  const lastTradeProfit =
+    profitData?.recentTrades?.find(
+      (trade) => trade.profit !== undefined && trade.profit !== 0
+    )?.profit || 0;
 
   // Handle toggle
   const handleToggle = async () => {
@@ -59,7 +80,7 @@ export default function LPPoolStats({
     }
   };
 
-  // Also add useEffect to fetch initial status on mount:
+  // Fetch ArbExecutor status
   useEffect(() => {
     const fetchStatus = async () => {
       try {
@@ -72,13 +93,29 @@ export default function LPPoolStats({
     };
 
     fetchStatus();
-
-    // Poll status every 30 seconds
     const interval = setInterval(fetchStatus, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  // Return from here
+  // Fetch profit data
+  useEffect(() => {
+    const fetchProfits = async () => {
+      try {
+        const response = await fetch("/api/arbexecutor/profits");
+        const data = await response.json();
+        if (data.success) {
+          setProfitData(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch profits:", err);
+      }
+    };
+
+    fetchProfits();
+    const interval = setInterval(fetchProfits, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-blue-100">
       <div className="flex items-center justify-between mb-6">
@@ -157,7 +194,7 @@ export default function LPPoolStats({
           )}
         </div>
 
-        {/* LAST TRANSACTION FEE - What you actually paid */}
+        {/* LAST TRANSACTION FEE */}
         {lastTxFee && (
           <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border-2 border-blue-200">
             <div>
@@ -197,6 +234,44 @@ export default function LPPoolStats({
             </span>
           )}
         </div>
+
+        {/* PROFIT DATA */}
+        {profitData?.hasData && (
+          <>
+            <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border-2 border-green-200">
+              <span className="text-slate-600 font-medium">Total Profit</span>
+              <div className="text-right">
+                <div
+                  className={`text-2xl font-bold ${
+                    profitData.totalProfit >= 0
+                      ? "text-green-700"
+                      : "text-red-700"
+                  }`}
+                >
+                  {profitData.totalProfit >= 0 ? "+" : ""}$
+                  {profitData.totalProfit.toFixed(6)}
+                </div>
+                <div className="text-sm text-green-600">
+                  ({profitData.totalProfitPercent >= 0 ? "+" : ""}
+                  {profitData.totalProfitPercent.toFixed(4)}%)
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+              <span className="text-slate-600 font-medium">
+                Profit Last Trade
+              </span>
+              <div
+                className={`text-2xl font-bold ${
+                  lastTradeProfit >= 0 ? "text-green-700" : "text-red-700"
+                }`}
+              >
+                {lastTradeProfit >= 0 ? "+" : ""}${lastTradeProfit.toFixed(6)}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="mt-2 text-xs text-slate-500 text-center">

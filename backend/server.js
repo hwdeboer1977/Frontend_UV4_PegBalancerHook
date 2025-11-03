@@ -182,17 +182,17 @@ hook.on("FeeChosen", async (rawFee, withFlag, toward, devBps, event) => {
   console.log(`Dev BPS: ${devBps}`);
   console.log("=".repeat(80) + "\n");
 
-  // Log swap immediately to JSON
-  await logBalance({
-    ...(await getBalances()),
-    txHash: event.transactionHash,
-    direction: "SWAP_DETECTED",
-    swapRawFee: Number(rawFee),
-    swapFeePercent: Number(rawFee) / 1000000,
-    swapFeeWithFlag: Number(withFlag),
-    swapToward: toward,
-    swapDevBps: Number(devBps),
-  });
+  // // Log swap immediately to JSON
+  // await logBalance({
+  //   ...(await getBalances()),
+  //   txHash: event.transactionHash,
+  //   direction: "SWAP_DETECTED",
+  //   swapRawFee: Number(rawFee),
+  //   swapFeePercent: Number(rawFee) / 1000000,
+  //   swapFeeWithFlag: Number(withFlag),
+  //   swapToward: toward,
+  //   swapDevBps: Number(devBps),
+  // });
 
   // Then check for arbitrage
   await checkAndExecuteArbitrage(event);

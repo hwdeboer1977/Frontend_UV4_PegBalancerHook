@@ -16,11 +16,10 @@ interface LPPoolStats {
   priceRawE18: string;
   sqrtPriceX96: string;
   liquidity: string;
-  fee: string;
   spread: string;
-  deadzoneUpper: string;
-  deadzoneLower: string;
-  inDeadzone: boolean;
+  lastTxFee: string | null; // NEW: Last transaction fee
+  lastTxHash: string | null; // NEW: Transaction hash
+  lastTxTimestamp: number | null; // NEW: Transaction timestamp
   isLoading: boolean;
   error: string | null;
 }
@@ -45,17 +44,19 @@ const retry = async <T>(
   throw last;
 };
 
-export function useLPPoolStats(navPrice = "1.0000"): LPPoolStats {
+export function useLPPoolStats(
+  navPrice = "1.0000",
+  account: string | null = null
+): LPPoolStats {
   const [stats, setStats] = useState<LPPoolStats>({
     lpPrice: "0.00",
     priceRawE18: "0",
     sqrtPriceX96: "0",
     liquidity: "0",
-    fee: SOFT_PEG_CONFIG.baseFee.toFixed(2),
     spread: "0.00",
-    deadzoneUpper: "0.00",
-    deadzoneLower: "0.00",
-    inDeadzone: false,
+    lastTxFee: null, // NEW
+    lastTxHash: null, // NEW
+    lastTxTimestamp: null, // NEW
     isLoading: true,
     error: null,
   });
@@ -133,38 +134,120 @@ export function useLPPoolStats(navPrice = "1.0000"): LPPoolStats {
           ? ((lpPriceValue - navPriceValue) * 10_000) / navPriceValue
           : ((navPriceValue - lpPriceValue) * 10_000) / navPriceValue;
 
-      // For display purposes, show the deadzone as a price range around NAV
-      const deadL =
-        navPriceValue * (1 - SOFT_PEG_CONFIG.deadzonePercent / 10_000);
-      const deadU =
-        navPriceValue * (1 + SOFT_PEG_CONFIG.deadzonePercent / 10_000);
+      // ====================================================================
+      // Calculate dynamic fee matching PegFeeMath.sol logic exactly
+      // ====================================================================
 
-      // Check if we're inside the deadzone
-      const inDead = devBps <= SOFT_PEG_CONFIG.deadzonePercent;
+      // // Parameters from your PegFeeMath.sol
+      // const BASE_FEE = 3000; // 0.30% in basis points
+      // const MIN_FEE = 500; // 0.05%
+      // const MAX_FEE = 100000; // 10%
+      // const DEADZONE_BPS = 25; // 0.25%
+      // const SLOPE_TOWARD = 150; // -0.015% per 1% deviation
+      // const SLOPE_AWAY = 1200; // +0.12% per 1% deviation
+      // const ARB_TRIGGER_BPS = 5000; // 50%
 
-      let currentFee = SOFT_PEG_CONFIG.baseFee;
-      if (!inDead) {
-        const deviation = Math.abs(spreadPct);
-        currentFee = Math.min(
-          SOFT_PEG_CONFIG.baseFee +
-            (deviation - SOFT_PEG_CONFIG.deadzonePercent) * 0.2,
-          3.0
-        );
-      }
+      // let feeInBps = BASE_FEE;
+
+      // // Check if in arb zone (extreme deviation)
+      // if (devBps >= ARB_TRIGGER_BPS) {
+      //   // If LP > NAV (away from peg), max fee
+      //   // If LP < NAV (toward peg when buying back), min fee
+      //   feeInBps = lpPriceValue > navPriceValue ? MAX_FEE : MIN_FEE;
+      // } else if (devBps > DEADZONE_BPS) {
+      //   // Beyond deadzone, apply slope adjustment
+      //   const beyondBps = devBps - DEADZONE_BPS;
+
+      //   // Determine direction:
+      //   // When someone SELLS yUSDC, LP price drops below NAV (LP < NAV)
+      //   // When someone BUYS yUSDC, LP price rises above NAV (LP > NAV)
+      //   // We charge higher fees for trades that move AWAY from peg
+
+      //   // For the CURRENT display, we show the fee for a trade moving AWAY
+      //   // (since that's the destabilizing direction)
+      //   const isLPAboveNAV = lpPriceValue > navPriceValue;
+
+      //   if (isLPAboveNAV) {
+      //     // LP is already above NAV, buying more yUSDC pushes it further away
+      //     // Apply AWAY slope (higher fee)
+      //     const magnitude = (SLOPE_AWAY * beyondBps) / 100;
+      //     feeInBps = BASE_FEE + magnitude;
+      //   } else {
+      //     // LP is below NAV, selling more yUSDC pushes it further away
+      //     // Apply AWAY slope (higher fee)
+      //     const magnitude = (SLOPE_AWAY * beyondBps) / 100;
+      //     feeInBps = BASE_FEE + magnitude;
+      //   }
+
+      //   // Clamp to min/max
+      //   feeInBps = Math.max(MIN_FEE, Math.min(MAX_FEE, feeInBps));
+      // }
+      // // else: within deadzone, keep BASE_FEE
+
+      // const currentFee = feeInBps / 10000; // Convert bps to percentage
 
       // TODO: real liquidity pull (needs pool manager reads). Placeholder for now.
       const liquidity = "—";
+
+      // ====================================================================
+      // NEW: Fetch last transaction fee from event logs (if account provided)
+      // ====================================================================
+      let lastTxFee: string | null = null;
+      let lastTxHash: string | null = null;
+      let lastTxTimestamp: number | null = null;
+
+      if (account && ethers.isAddress(account)) {
+        try {
+          const latestBlock = await read.getBlockNumber();
+          const fromBlock = Math.max(0, latestBlock - 1000);
+
+          // Query for FeeChosen events
+          const filter = hook.filters.FeeChosen?.();
+
+          if (filter) {
+            const events = await hook.queryFilter(
+              filter,
+              fromBlock,
+              latestBlock
+            );
+
+            if (events.length > 0) {
+              const lastEvent = events[events.length - 1];
+              const eventArgs = lastEvent.args;
+
+              // rawFee is in basis points (e.g., 3000 = 30.00%)
+              if (eventArgs?.rawFee !== undefined) {
+                const feeBps = Number(eventArgs.rawFee);
+                lastTxFee = (feeBps / 10000).toFixed(2);
+              }
+
+              lastTxHash = lastEvent.transactionHash;
+
+              try {
+                const receipt = await read.getTransactionReceipt(
+                  lastEvent.transactionHash
+                );
+                if (receipt) {
+                  const block = await read.getBlock(receipt.blockNumber);
+                  lastTxTimestamp = block?.timestamp || null;
+                }
+              } catch {}
+            }
+          }
+        } catch (eventErr) {
+          console.warn("Failed to fetch last transaction fee:", eventErr);
+        }
+      }
 
       setStats({
         lpPrice: lpPriceValue.toFixed(4),
         priceRawE18: priceRawE18.toString(),
         sqrtPriceX96: sqrtP.toString(),
         liquidity,
-        fee: currentFee.toFixed(2),
         spread: spreadPct.toFixed(2),
-        deadzoneUpper: deadU.toFixed(2),
-        deadzoneLower: deadL.toFixed(2),
-        inDeadzone: inDead,
+        lastTxFee, // NEW
+        lastTxHash, // NEW
+        lastTxTimestamp, // NEW
         isLoading: false,
         error: null,
       });
@@ -175,7 +258,7 @@ export function useLPPoolStats(navPrice = "1.0000"): LPPoolStats {
         : err?.reason || err?.message || "Failed to fetch LP data";
       setStats((s) => ({ ...s, isLoading: false, error: msg }));
     }
-  }, [navPrice]);
+  }, [navPrice, account]);
 
   useEffect(() => {
     fetchLPStats();

@@ -37,7 +37,7 @@ const config = {
   wssUrl: process.env.NEXT_PUBLIC_ALCHEMY_API_WSS_KEY_FULL,
   usdcAddress: process.env.NEXT_PUBLIC_USDC_ADDRESS,
   yusdcAddress: process.env.NEXT_PUBLIC_YUSDC_ADDRESS,
-  hookAddress: process.env.NEXT_PUBLIC_HOOK_ADDR,
+  hookAddress: process.env.NEXT_PUBLIC_HOOK_ADDRESS,
   vaultAddress: process.env.NEXT_PUBLIC_VAULT_ADDRESS,
   arbExecutor: process.env.NEXT_PUBLIC_ARB_EXECUTOR,
   dec0: process.env.NEXT_PUBLIC_DECIMALS0,

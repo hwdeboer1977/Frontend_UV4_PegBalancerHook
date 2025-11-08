@@ -1,8 +1,8 @@
 {
   "startTime": "2025-11-01T05:54:15.364Z",
   "startingBalance": 48089.778642,
-  "currentBalance": 254971.327349,
-  "totalTrades": 54,
+  "currentBalance": 202600.539884,
+  "totalTrades": 56,
   "balanceHistory": [
     {
       "timestamp": "2025-11-01T05:54:15.366Z",
@@ -973,6 +973,42 @@
       "changePercentFromPrev": 0.1726490639366528,
       "totalProfit": 206881.548707,
       "totalProfitPercent": 430.19858803491474
+    },
+    {
+      "timestamp": "2025-11-08T08:28:08.798Z",
+      "balUSDC": 100000,
+      "balYUSDC": 100000,
+      "sharePrice": 1,
+      "totalValueUSDC": 200000,
+      "txHash": null,
+      "direction": null,
+      "swapRawFee": null,
+      "swapFeePercent": null,
+      "swapFeeWithFlag": null,
+      "swapToward": null,
+      "swapDevBps": null,
+      "changeFromPrev": -54971.327349,
+      "changePercentFromPrev": -21.559807497003877,
+      "totalProfit": 151910.221358,
+      "totalProfitPercent": 315.8887931027545
+    },
+    {
+      "timestamp": "2025-11-08T08:28:29.828Z",
+      "balUSDC": 102600.539884,
+      "balYUSDC": 100000,
+      "sharePrice": 1,
+      "totalValueUSDC": 202600.539884,
+      "txHash": "0x62bc8581b9b3282e986a1e4d569d0bbf10bbf9c42208ead5a00954870061251c",
+      "direction": "LP_TO_VAULT",
+      "swapRawFee": null,
+      "swapFeePercent": null,
+      "swapFeeWithFlag": null,
+      "swapToward": null,
+      "swapDevBps": null,
+      "changeFromPrev": 2600.539883999998,
+      "changePercentFromPrev": 1.300269941999999,
+      "totalProfit": 154510.761242,
+      "totalProfitPercent": 321.29647007161617
     }
   ]
 }

@@ -19,7 +19,7 @@ dotenv.config({ path: join(__dirname, "..", ".env") });
 // CONFIGURATION
 // ============================================================================
 
-const HOOK = ethers.getAddress(process.env.NEXT_PUBLIC_HOOK_ADDR.trim());
+const HOOK = ethers.getAddress(process.env.NEXT_PUBLIC_HOOK_ADDRESS.trim());
 const TOKEN0_RAW = ethers.getAddress(
   process.env.NEXT_PUBLIC_USDC_ADDRESS.trim()
 );
